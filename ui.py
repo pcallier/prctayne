@@ -50,6 +50,12 @@ class Form(QWidget):
         else:
              QMessageBox.information(self, "Success!", "Hello {}!".format(name))
 
+    def on_like(self):
+        QMessageBox.information(self, "Liked", "Like Patch")
+
+    def on_next(self):
+        QMessageBox.information(self, "Next", "Next Song")
+
 
 def show_gui():
     app = QApplication(sys.argv)
