@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
+import os
 import subprocess
 from subprocess import PIPE, Popen
 import logging
+
 from scipy.io.wavfile import write
 from numpy import linspace,sin,pi,int16,concatenate
 import numpy as np
+
+wav_dir = "wavs"
 
 def sinosc(freq, dur, amp=1, rate=44100):
     # empty wav
@@ -90,11 +94,12 @@ def trim_at_zcp(sig):
     # will fail if zcp_a and b are the same place, i.e. only one zero-crossing point
     return ([0] + sig[zcp_a:zcp_b] + [0]).astype(sig.dtype)
 
+def store_wav(snd, name, br=44100, prefix=wav_dir):
+    write(os.path.join(prefix, name+".wav"), br, snd)
 
-
-
-def play_wav(wav):
-    return subprocess.call(['aplay', wav], stdout=PIPE, stderr=PIPE)
+def play_wav(wav, prefix='wavs'):
+    return subprocess.call(['aplay', os.path.join(prefix, wav)],
+                           stdout=PIPE, stderr=PIPE)
 
 if __name__=="__main__":
     logging.basicConfig()
@@ -105,20 +110,20 @@ if __name__=="__main__":
     tone2 = sinosc(660, 2, amp=10000)
 
     tone_cat = concatenate((tone, tone2), axis=0)
-    write('2-tone.wav',44100,tone_cat)
+    store_wav(tone_cat,'2-tone')
 
     tone_stack = limiter(tone + tone2, 10000)
-    write('stack-tone.wav',44100,tone_stack)
-    write('stack-tone-loud.wav',44100,tone+tone2)
+    store_wav(tone_stack, 'stack-tone')
+    store_wav(tone+tone2, 'stack-tone-loud')
 
     # generate 3 random waves
     three_waves = trim_at_zcp(n_random_sines(3, 220, 660))
-    write('3-waves.wav', 44100, three_waves)
+    store_wav(three_waves, '3-waves')
     
     # generate random no of waves
     n_waves = trim_at_zcp(n_random_sines(
         np.random.randint(2,8),150,1000))
-    write('n-waves.wav', 44100, n_waves)
+    store_wav(n_waves, 'n-waves')
     
     logger = logging.getLogger(__name__)
     logger.debug("Length of n_waves: {}\nLength of 3-waves: {}".format(len(n_waves),len(three_waves)))
